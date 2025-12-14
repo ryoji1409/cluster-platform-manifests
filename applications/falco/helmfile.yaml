@@ -1,0 +1,19 @@
+---
+repositories:
+  - name: falcosecurity
+    url: https://falcosecurity.github.io/charts
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: falco
+  namespace: falco
+  chart: falcosecurity/falco
+  version: 7.0.2
+  installed: true
+  createNamespace: true
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

@@ -1,0 +1,12 @@
+environments:
+  dev:
+  prod:
+
+helmfiles:
+  - path: applications/argo-cd/helmfile.yaml
+  - path: applications/argo-workflows/helmfile.yaml
+  - path: applications/ray-operator/helmfile.yaml
+  - path: applications/kube-prometheus-stack/helmfile.yaml
+  - path: applications/metallb/helmfile.yaml
+  - path: applications/jenkins/helmfile.yaml
+  - path: applications/falco/helmfile.yaml

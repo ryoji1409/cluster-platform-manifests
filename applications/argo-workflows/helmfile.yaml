@@ -1,0 +1,19 @@
+---
+repositories:
+  - name: argo
+    url: https://argoproj.github.io/argo-helm
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: argo-workflow
+  namespace: argo
+  chart: argo/argo-workflows
+  version: 0.46.2
+  installed: true
+  createNamespace: true
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

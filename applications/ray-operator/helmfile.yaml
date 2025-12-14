@@ -1,0 +1,19 @@
+---
+repositories:
+  - name: kuberay
+    url: https://ray-project.github.io/kuberay-helm/
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: kuberay-operator
+  namespace: ray-system
+  chart: kuberay/kuberay-operator
+  version: 1.5.1
+  installed: true
+  createNamespace: true
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

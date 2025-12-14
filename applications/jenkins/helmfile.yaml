@@ -1,0 +1,19 @@
+---
+repositories:
+  - name: jenkins
+    url: https://charts.jenkins.io
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: jenkins
+  namespace: jenkins
+  chart: jenkins/jenkins
+  version: 5.8.114
+  installed: true
+  createNamespace: true
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

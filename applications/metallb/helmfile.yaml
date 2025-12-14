@@ -1,0 +1,19 @@
+---
+repositories:
+  - name: metallb
+    url: https://metallb.github.io/metallb
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: metallb
+  namespace: metallb-system
+  chart: metallb/metallb
+  version: 0.15.3
+  installed: true
+  createNamespace: true
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

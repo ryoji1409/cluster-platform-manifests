@@ -1,0 +1,173 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-workflow
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: argo-workflow
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-cd
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: argo-cd
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kuberay-operator
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: kuberay-operator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ray-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: kube-prometheus-stack
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metallb
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: metallb
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: metallb-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: falco
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: falco
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: falco
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: ./
+    targetRevision: main
+    plugin:
+      name: helmfile
+      parameters:
+        - name: name
+          string: jenkins
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jenkins
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

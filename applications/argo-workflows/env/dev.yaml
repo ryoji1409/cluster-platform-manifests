@@ -1,0 +1,8 @@
+# https://github.com/argoproj/argo-helm/blob/main/charts/argo-workflows/values.yaml
+persistence:
+  archive: true
+
+server:
+  authModes:
+  - server
+  serviceType: NodePort
