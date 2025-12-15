@@ -15,5 +15,7 @@ releases:
   version: 0.15.3
   installed: true
   createNamespace: true
+  labels:
+    - app: metallb
   values:
     - ./env/{{ .Environment.Name }}.yaml

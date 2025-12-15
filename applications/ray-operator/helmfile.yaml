@@ -15,5 +15,7 @@ releases:
   version: 1.5.1
   installed: true
   createNamespace: true
+  labels:
+    - app: kuberay-operator
   values:
     - ./env/{{ .Environment.Name }}.yaml

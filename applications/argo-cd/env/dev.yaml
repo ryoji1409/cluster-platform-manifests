@@ -13,14 +13,14 @@ configs:
         parameters:
           static:
             - name: name
-              title: Helmfile Release Name
+              title: Helmfile App Label Name
               required: true
         generate:
           command:
             - bash
             - "-c"
             - |
-                helmfile -e dev -l name="$PARAM_NAME" template --include-crds -q
+                helmfile -e dev -l app="$PARAM_NAME" template --include-crds -q
 repoServer:
   extraContainers:
     - name: helmfile-sidecar
@@ -55,5 +55,5 @@ repoServer:
       emptyDir: {}
 
 redisSecretInit:
-  enabled: false
+  enabled: true
 

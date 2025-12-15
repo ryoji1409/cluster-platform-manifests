@@ -16,5 +16,7 @@ releases:
   version: 80.4.1
   installed: true
   createNamespace: true
+  labels:
+    - app: kube-prometheus-stack
   values:
     - ./env/{{ .Environment.Name }}.yaml

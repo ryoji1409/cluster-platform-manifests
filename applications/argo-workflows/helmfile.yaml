@@ -15,5 +15,7 @@ releases:
   version: 0.46.2
   installed: true
   createNamespace: true
+  labels:
+    - app: argo-workflow
   values:
     - ./env/{{ .Environment.Name }}.yaml
