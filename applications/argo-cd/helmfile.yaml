@@ -16,6 +16,6 @@ releases:
   installed: true
   createNamespace: true
   labels:
-    - app: argo-cd
+    app: argo-cd
   values:
     - ./env/{{ .Environment.Name }}.yaml

@@ -16,6 +16,6 @@ releases:
   installed: true
   createNamespace: true
   labels:
-    - app: jenkins
+    app: jenkins
   values:
     - ./env/{{ .Environment.Name }}.yaml

@@ -16,6 +16,6 @@ releases:
   installed: true
   createNamespace: true
   labels:
-    - app: falco
+    app: falco
   values:
     - ./env/{{ .Environment.Name }}.yaml
