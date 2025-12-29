@@ -2,6 +2,7 @@
 
 prometheus:
   prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
     retention: 30d
     resources:
       requests:
