@@ -171,3 +171,28 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: whereabouts
+  namespace: argo
+spec:
+  project: default
+  sources:
+    - chart: whereabouts-chart
+      repoURL: ghcr.io/k8snetworkplumbingwg
+      targetRevision: 0.9.2
+      helm:
+        valueFiles:
+        - $values/applications/whereabouts/env/dev.yaml
+    - repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
