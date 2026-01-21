@@ -196,3 +196,22 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: multus-nad
+  namespace: argo
+spec:
+  project: dev
+  source:
+    repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+    path: applications/nad/environment/development
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: multus-nad
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
