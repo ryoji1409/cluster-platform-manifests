@@ -13,3 +13,4 @@ spec:
     server: https://kubernetes.default.svc
   sourceRepos:
   - https://github.com/ryoji1409/cluster-platform-manifests.git
+  - ghcr.io/k8snetworkplumbingwg
