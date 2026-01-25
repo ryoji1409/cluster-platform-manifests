@@ -1,0 +1,21 @@
+---
+repositories:
+  - name: hashicorp
+    url: https://helm.releases.hashicorp.com
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: vault
+  namespace: vault
+  chart: hashicorp/vault
+  version: 0.32.0
+  installed: true
+  createNamespace: true
+  labels:
+    app: vault
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

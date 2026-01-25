@@ -1,0 +1,21 @@
+---
+repositories:
+  - name: sealed-secrets
+    url: https://bitnami-labs.github.io/sealed-secrets
+
+environments:
+  dev:
+  prod:
+
+---
+releases:
+- name: sealed-secrets
+  namespace: sealed-secrets
+  chart: sealed-secrets/sealed-secrets
+  version: 2.18.0
+  installed: true
+  createNamespace: true
+  labels:
+    app: sealed-secrets
+  values:
+    - ./env/{{ .Environment.Name }}.yaml

@@ -10,3 +10,5 @@ helmfiles:
   - path: applications/metallb/helmfile.yaml
   - path: applications/jenkins/helmfile.yaml
   - path: applications/falco/helmfile.yaml
+  - path: applications/vault/helmfile.yaml
+  - path: applications/sealed-secrets/helmfile.yaml

@@ -1,0 +1,5 @@
+# https://github.com/hashicorp/vault-helm/blob/main/values.yaml
+
+server:
+  dev:
+    enabled: true
