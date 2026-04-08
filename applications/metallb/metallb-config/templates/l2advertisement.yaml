@@ -1,0 +1,18 @@
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: {{ .Values.l2Advertisement.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- with .Values.l2Advertisement.ipAddressPools }}
+  ipAddressPools:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.l2Advertisement.interfaces }}
+  interfaces:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.l2Advertisement.nodeSelectors }}
+  nodeSelectors:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}

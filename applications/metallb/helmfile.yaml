@@ -19,3 +19,11 @@ releases:
     app: metallb
   values:
     - ./env/{{ .Environment.Name }}.yaml
+
+- name: metallb-config
+  namespace: metallb-system
+  chart: ./metallb-config
+  needs:
+    - metallb-system/metallb
+  values:
+    - metallb-config/values.yaml
