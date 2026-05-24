@@ -263,3 +263,28 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: envoy-gateway
+  namespace: argo
+spec:
+  project: dev
+  sources:
+    - chart: gateway-helm
+      repoURL: docker.io/envoyproxy
+      targetRevision: v1.8.0
+      helm:
+        valueFiles:
+        - $values/applications/envoy/env/dev.yaml
+    - repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: envoy-gateway-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
