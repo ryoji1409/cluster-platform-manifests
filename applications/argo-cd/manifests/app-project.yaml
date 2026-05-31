@@ -14,4 +14,5 @@ spec:
   sourceRepos:
   - https://github.com/ryoji1409/cluster-platform-manifests.git
   - ghcr.io/k8snetworkplumbingwg
+  - docker.io/envoyproxy
   - ghcr.io/aquasecurity/helm-charts
