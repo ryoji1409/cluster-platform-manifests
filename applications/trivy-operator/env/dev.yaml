@@ -1,1 +1,14 @@
 # https://github.com/aquasecurity/trivy-operator/blob/main/deploy/helm/values.yaml
+
+trivyOperator:
+  scanJobTolerations:
+    - effect: NoSchedule
+      operator: Exists
+    - effect: NoExecute
+      operator: Exists
+nodeCollector:
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+    - effect: NoExecute
+      operator: Exists
