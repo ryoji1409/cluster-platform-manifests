@@ -14,3 +14,4 @@ spec:
   sourceRepos:
   - https://github.com/ryoji1409/cluster-platform-manifests.git
   - ghcr.io/k8snetworkplumbingwg
+  - ghcr.io/aquasecurity/helm-charts

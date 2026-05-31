@@ -288,3 +288,28 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: trivy-operator
+  namespace: argo
+spec:
+  project: dev
+  sources:
+    - chart: trivy-operator
+      repoURL: ghcr.io/aquasecurity/helm-charts
+      targetRevision: 0.32.1
+      helm:
+        valueFiles:
+          - $values/applications/trivy-operator/env/dev.yaml
+    - repoURL: https://github.com/ryoji1409/cluster-platform-manifests.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: trivy-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
