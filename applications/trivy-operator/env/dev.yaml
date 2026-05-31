@@ -1,5 +1,8 @@
 # https://github.com/aquasecurity/trivy-operator/blob/main/deploy/helm/values.yaml
-
+operator:
+  metricsVulnIdEnabled: true
+serviceMonitor:
+  enabled: true
 trivyOperator:
   scanJobTolerations:
     - effect: NoSchedule
