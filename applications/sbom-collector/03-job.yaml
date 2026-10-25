@@ -1,0 +1,100 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: sbom-collector-
+  namespace: security
+  labels:
+    app: sbom-collector
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+
+  template:
+    metadata:
+      labels:
+        app: sbom-collector
+    spec:
+      serviceAccountName: sbom-collector
+      restartPolicy: Never
+
+      initContainers:
+        # Step 1: Image Collector
+        - name: collector
+          image: alpine:3.22
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              apk add --no-cache kubectl jq
+              /bin/sh /scripts/collect.sh
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: data
+              mountPath: /data
+
+        # Step 2: SBOM Generation
+        - name: syft
+          image: anchore/syft:v1.54.1-debug
+          command:
+            - /busybox/sh
+            - /scripts/scan.sh
+          env:
+            - name: MAX_IMAGES
+              value: "100"
+            # 1イメージあたりのスキャン上限（秒）
+            - name: SCAN_TIMEOUT
+              value: "600"
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: data
+              mountPath: /data
+
+      # Step 3: Hold results for kubectl cp
+      containers:
+        - name: result-holder
+          image: alpine:3.22
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - |
+              echo "Results are ready."
+              echo "Copy /data using kubectl cp."
+              echo "Keeping Pod alive for 30 minutes."
+              sleep 1800
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+
+      volumes:
+        - name: scripts
+          configMap:
+            name: sbom-collector-scripts
+
+        - name: data
+          emptyDir:
+            sizeLimit: 5Gi

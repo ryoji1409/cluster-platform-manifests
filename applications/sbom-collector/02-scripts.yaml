@@ -1,0 +1,206 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sbom-collector-scripts
+  namespace: security
+data:
+  collect.sh: |
+    #!/bin/sh
+    set -eu
+
+    mkdir -p /data/sbom
+
+    echo "[collector] Getting Pods..."
+
+    kubectl \
+      --server="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT_HTTPS}" \
+      --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+      --token="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+      get pods -A -o json \
+      --request-timeout=120s \
+      > /data/pods.json
+
+    echo "[collector] Extracting images..."
+
+    jq -r '
+      def rows($p; $type; $spec; $statuses):
+        $spec[]? as $c
+        | (
+            [$statuses[]? | select(.name == $c.name)]
+            | first // {}
+          ) as $s
+        | ($s.imageID // "") as $raw
+        | (
+            $raw |
+            sub("^[a-zA-Z][a-zA-Z0-9+.-]*://"; "")
+          ) as $id
+        | (
+            if ($id | test("@sha256:[0-9a-fA-F]{64}$"))
+            then $id
+            else ""
+            end
+          ) as $ref
+        | [
+            $p.metadata.namespace,
+            $p.metadata.name,
+            ($p.spec.nodeName // ""),
+            $type,
+            $c.name,
+            $c.image,
+            $raw,
+            $ref
+          ]
+        | @tsv;
+
+      .items[] as $p
+      | rows(
+          $p; "container";
+          ($p.spec.containers // []);
+          ($p.status.containerStatuses // [])
+        ),
+        rows(
+          $p; "initContainer";
+          ($p.spec.initContainers // []);
+          ($p.status.initContainerStatuses // [])
+        ),
+        rows(
+          $p; "ephemeralContainer";
+          ($p.spec.ephemeralContainers // []);
+          ($p.status.ephemeralContainerStatuses // [])
+        )
+    ' /data/pods.json > /data/rows.tsv
+
+    {
+      printf 'NAMESPACE\tPOD\tNODE\tTYPE\tCONTAINER\tIMAGE\tIMAGE_ID\tSCAN_REF\n'
+      cat /data/rows.tsv
+    } > /data/workloads.tsv
+
+    {
+      printf 'SCAN_REF\n'
+      awk -F '\t' '$8 != "" { print $8 }' \
+        /data/rows.tsv | sort -u
+    } > /data/images.tsv
+
+    {
+      head -n 1 /data/workloads.tsv
+      awk -F '\t' '$8 == ""' /data/rows.tsv
+    } > /data/unresolved.tsv
+
+    rm /data/pods.json /data/rows.tsv
+
+    echo "[collector] Finished."
+    echo "Unique scannable images:"
+    tail -n +2 /data/images.tsv | wc -l
+
+    echo "Unresolved containers:"
+    tail -n +2 /data/unresolved.tsv | wc -l
+  scan.sh: |
+    #!/busybox/sh
+    set -eu
+
+    mkdir -p /data/sbom /data/errors
+
+    MAX="${MAX_IMAGES:-100}"
+    # 1イメージあたりのスキャン上限（秒）
+    SCAN_TIMEOUT="${SCAN_TIMEOUT:-600}"
+    count=0
+    success=0
+    failed=0
+
+    printf 'IMAGE\tFILE\tSTATUS\n' > /data/scan-results.tsv
+
+    echo "[syft] Starting scans (max: $MAX, timeout: ${SCAN_TIMEOUT}s)"
+
+    # images.tsvのヘッダーを除去（images.tsvがない場合はset -eにより異常終了）
+    tail -n +2 /data/images.tsv > /data/images-list.txt
+    total="$(grep -c . /data/images-list.txt || true)"
+
+    while IFS= read -r image || [ -n "$image" ]; do
+      [ -n "$image" ] || continue
+
+      if [ "$count" -ge "$MAX" ]; then
+        break
+      fi
+
+      count=$((count + 1))
+
+      digest="${image##*@sha256:}"
+      short_digest="$(printf '%s' "$digest" | cut -c1-12)"
+
+      # イメージ名をファイル名に変換
+      image_name="${image%@sha256:*}"
+      image_name="$(printf '%s' "$image_name" |
+        sed 's|^[^/]*/||; s|/|-|g; s|[^a-zA-Z0-9._-]|-|g')"
+
+      output="/data/sbom/${image_name}-${short_digest}.json"
+      error_file="/data/errors/${image_name}-${short_digest}.log"
+
+      echo "[syft] ($count/$MAX) Scanning: $image"
+
+      if timeout "$SCAN_TIMEOUT" /syft scan "$image" \
+          --from registry \
+          -o "cyclonedx-json=$output" \
+          2>"$error_file"; then
+
+        echo "[syft] SUCCESS: $image"
+
+        printf '%s\t%s\tSUCCESS\n' \
+          "$image" "$output" >> /data/scan-results.tsv
+
+        rm -f "$error_file"
+        success=$((success + 1))
+      else
+        # timeoutで打ち切られた場合は143（SIGTERM）
+        rc=$?
+        echo "[syft] FAILED (exit $rc): $image"
+        rm -f "$output"
+
+        # 失敗時のFILEはエラーログのパス
+        printf '%s\t%s\tFAILED\n' \
+          "$image" "$error_file" >> /data/scan-results.tsv
+
+        echo "[syft] Error details (last 10 lines):"
+        tail -n 10 "$error_file" || true
+
+        failed=$((failed + 1))
+      fi
+    done < /data/images-list.txt
+
+    skipped=$((total - count))
+
+    {
+      printf 'METRIC\tVALUE\n'
+      printf 'total\t%s\n' "$total"
+      printf 'attempted\t%s\n' "$count"
+      printf 'success\t%s\n' "$success"
+      printf 'failed\t%s\n' "$failed"
+      printf 'skipped\t%s\n' "$skipped"
+    } > /data/scan-summary.tsv
+
+    echo "[syft] Scan completed."
+    echo "[syft] Total images: $total"
+    echo "[syft] Attempted: $count"
+    echo "[syft] Success: $success"
+    echo "[syft] Failed: $failed"
+    echo "[syft] Skipped (MAX_IMAGES): $skipped"
+    echo "[syft] Results are in /data/sbom/, errors in /data/errors/"
+
+    if [ "$total" -eq 0 ]; then
+      echo "[syft] WARNING: No scannable images. Check collector logs and unresolved.tsv."
+    fi
+
+    if [ "$failed" -gt 0 ]; then
+      echo "[syft] WARNING: $failed image(s) could not be scanned."
+    fi
+
+    if [ "$count" -gt 0 ] && [ "$success" -eq 0 ]; then
+      echo "[syft] WARNING: No SBOM was generated."
+    fi
+
+    if [ "$skipped" -gt 0 ]; then
+      echo "[syft] WARNING: $skipped image(s) skipped by MAX_IMAGES=$MAX."
+    fi
+
+    # 個別イメージの失敗では異常終了せず、後続のresult-holderを起動させる。
+    # スキャンの成否はscan-summary.tsv / scan-results.tsvで確認する。
+    exit 0
